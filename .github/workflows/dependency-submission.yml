@@ -1,0 +1,42 @@
+name: Dependency Submission
+on:
+  # Trigger on push to the main branch
+  push:
+    branches:
+      - main
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+permissions:
+  contents: write # Required for submitting the snapshot to GitHub
+
+jobs:
+  submit-dependencies:
+    runs-on: ubuntu-latest
+
+    env:
+      SNAPSHOT_FILE_PATH: 'output.json'
+    
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 🛠️ Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Use an actively supported LTS version for better compatibility
+          node-version: '20' 
+          
+      - name: 📦 Install Dependencies & Update Lock File (Secure)
+        # Guarantees package-lock.json is up-to-date. --ignore-scripts maintains security.
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install --ignore-scripts --force-lock
+
+      - name: ⚙️ Generate and Submit Dependency Snapshot
+        # 🔑 CORRECTED ACTION PATH IS HEREE 🔑
+        uses: advanced-security/component-detection-dependency-submission-action@d433c2f467e149a8009c8fbce92cc708ed15ef7b
+        with:
+          # Writes the snapshot to the path defined in the env block
+          detectorsFilter: "Npm,NpmLockfile3"
